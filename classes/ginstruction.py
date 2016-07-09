@@ -1,16 +1,17 @@
 class GInstruction:
-    def __init__(self, instructionType, xcoord, ycoord, zcoord, extrude, temperature):
+    def __init__(self, instructionType, xcoord, ycoord, zcoord, extrude, feedrate, temperature):
         self.instructionType = instructionType
         self.xcoord = xcoord
         self.ycoord = ycoord
         self.zcoord = zcoord
         self.extrude = extrude
+        self.feedrate = feedrate
         self.temperature = temperature
 
     def toString(self):
         return "Type: " + self.instructionType + ", X: " + str(self.xcoord) + \
                 ", Y: " + str(self.ycoord) + ", Z: " + str(self.zcoord) + \
-                ", E: " + str(self.extrude) + \
+                ", E: " + str(self.extrude) + ", F: " + str(self.feedrate) + \
                 ", S: " + str(self.temperature);
 
     @staticmethod
@@ -23,6 +24,7 @@ class GInstruction:
             ycoord = float(0)
             zcoord = float(0)
             extrude = float(0)
+            feedrate = float(0)
 
             # Extract type
             instructionType = line[:GInstruction.getDelimiter(line)]
@@ -51,7 +53,13 @@ class GInstruction:
                 temp = temp[1:GInstruction.getDelimiter(temp)]
                 extrude = float(temp)
 
-            return GInstruction(instructionType, xcoord, ycoord, zcoord, extrude, float(0))
+            # Extract feedrate
+            if 'F' in line:
+                temp = line[line.index('F'):]
+                temp = temp[1:GInstruction.getDelimiter(temp)]
+                feedrate = float(temp)
+
+            return GInstruction(instructionType, xcoord, ycoord, zcoord, extrude, feedrate, float(0))
         elif line[0] == 'M': # Handle M code
             temperature = float(0)
 
@@ -60,16 +68,17 @@ class GInstruction:
                 temp = line[line.index('S'):GInstruction.getDelimiter(line)]
                 temperature = float(temp)
 
-            return GInstruction(instructionType, 0, 0, 0, 0, temperature)
+            return GInstruction(instructionType, 0, 0, 0, 0, 0, temperature)
         else:
             return None
 
 
     @staticmethod
     def getDelimiter(string):
-        index = string.index(' ')
-        if index <= 0:
-            index = len(string)-1
+        if ' ' in string:
+            index = string.index(' ')
+        else:
+            return len(string)
 
         offset = len(string) - index
         offset = offset * -1
